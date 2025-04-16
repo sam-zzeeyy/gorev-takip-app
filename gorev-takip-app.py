@@ -3,8 +3,10 @@ import pandas as pd
 from datetime import datetime
 import io
 
+# Sayfa yapılandırması
 st.set_page_config(page_title="Görev Takip", layout="centered")
 
+# Özel stiller (butonlar, kutular, kartlar için)
 st.markdown("""
     <style>
         .big-button > button {
@@ -40,33 +42,42 @@ st.markdown("""
             padding-top: 1.5rem;
             padding-bottom: 1rem;
         }
+
+        input[type="text"], input[type="date"] {
+            font-size: 1.1em !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
+# Başlık
 st.markdown("<h2 style='text-align: center;'>📋 Görev Takip</h2>", unsafe_allow_html=True)
 
+# Görevleri tutmak için session state
 if "gorevler" not in st.session_state:
     st.session_state["gorevler"] = []
 
+# GÖREV EKLEME FORMU
 st.markdown("### ➕ Yeni Görev")
 
 with st.form("form", clear_on_submit=True):
-    gorev_adi = st.text_input("Görev Adı", placeholder="Örn: Sipariş Kontrolü")
-    sorumlu = st.text_input("Sorumlu Kişi", placeholder="Örn: Ayşe")
+    gorev_adi = st.text_input("Görev Adı", placeholder="Örn: Depo Kontrolü", label_visibility="visible")
+    sorumlu = st.text_input("Sorumlu Kişi", placeholder="Örn: Samet", label_visibility="visible")
     tarih = st.date_input("Tarih", value=datetime.today())
+
     submitted = st.form_submit_button("✅ Görevi Kaydet")
 
     if submitted:
-        if gorev_adi and sorumlu:
+        if gorev_adi.strip() and sorumlu.strip():
             st.session_state["gorevler"].append({
-                "Görev": gorev_adi,
-                "Sorumlu": sorumlu,
+                "Görev": gorev_adi.strip(),
+                "Sorumlu": sorumlu.strip(),
                 "Tarih": tarih.strftime("%d.%m.%Y")
             })
             st.success("Görev başarıyla kaydedildi ✅")
         else:
             st.warning("Lütfen tüm alanları doldurun.")
 
+# Kayıtlı görevler
 if st.session_state["gorevler"]:
     st.markdown("### 📌 Kayıtlı Görevler")
 
@@ -79,6 +90,7 @@ if st.session_state["gorevler"]:
         </div>
         """, unsafe_allow_html=True)
 
+    # Excel export
     df = pd.DataFrame(st.session_state["gorevler"])
     with io.BytesIO() as buffer:
         with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
